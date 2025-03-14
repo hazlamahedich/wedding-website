@@ -38,12 +38,22 @@ This page provides travel information for wedding guests, including flight optio
      - Link to the platform's website
    - Accommodation tips section with helpful advice
 
-5. **Skyscanner Integration Section**
+5. **Interactive Flight Map Section**
+   - Visual representation of flight routes on an OpenStreetMap-based map
+   - Interactive features:
+     - Toggle between all routes, international flights, and domestic flights
+     - Hover over flight routes to highlight and display detailed information
+     - Click on markers to see destination information and flight details
+     - Color-coded routes and markers for different types of flights
+     - Detailed legend explaining map elements
+   - Dynamic display of selected route information below the map
+
+6. **Skyscanner Integration Section**
    - Link to Skyscanner for real-time flight searches
    - Styled call-to-action button
    - Information about checking for the latest flight updates
 
-6. **Travel Tips Section**
+7. **Travel Tips Section**
    - List of helpful tips for travelers
 
 ## Flight Routes
@@ -99,6 +109,11 @@ The page includes several interactive elements:
   - Schedules
   - Terminal information
   - Special notes about the service
+- Interactive flight map with:
+  - Toggleable views (all routes, international, domestic)
+  - Hoverable flight routes that display detailed information
+  - Clickable destination markers with popup information
+  - Dynamic route selection and information display
 - Skyscanner button that links to flight search results
 - Scroll down indicator in the hero section
 - Hover effects on flight cards, airline logos, and buttons
@@ -134,8 +149,11 @@ The page is fully responsive with specific adjustments for:
 - React
 - styled-components
 - react-router-dom
+- react-leaflet (for interactive map)
+- leaflet (map library)
 - CursorElement (custom component)
 - WeddingAnimations (custom component)
+- InteractiveFlightMap (custom component)
 
 ## External Integrations
 
