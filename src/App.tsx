@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, HashRouter } from 'react-router-dom';
 import { createGlobalStyle } from 'styled-components';
 import { CursorProvider } from './contexts/CursorContext';
 import CustomCursor from './components/CustomCursor';
 import Navigation from './components/Navigation';
 import HomePage from './pages/HomePage';
-import OurStoryPage from './pages/OurStoryPage';
 import RSVPPage from './pages/RSVPPage';
-import GalleryPage from './pages/GalleryPage';
 import VenuePage from './pages/VenuePage';
 import DetailsPage from './pages/DetailsPage';
 import TravelPage from './pages/TravelPage';
@@ -42,18 +40,6 @@ const GlobalStyle = createGlobalStyle`
   }
 `;
 
-// Temporary placeholder page
-const RegistryPage = () => (
-  <div style={{ padding: '120px 40px 80px', maxWidth: '1200px', margin: '0 auto' }}>
-    <h2 style={{ textAlign: 'center', marginBottom: '40px', color: COLORS.PRIMARY_RUSTY_BLUE }}>
-      Gift Registry
-    </h2>
-    <p style={{ textAlign: 'center', marginBottom: '20px' }}>
-      This page is coming soon with registry information.
-    </p>
-  </div>
-);
-
 // Wrapper to handle current path for navigation
 const AppWrapper = () => {
   const location = useLocation();
@@ -68,13 +54,10 @@ const AppWrapper = () => {
       <Navigation currentPath={location.pathname} />
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/our-story" element={<OurStoryPage />} />
         <Route path="/details" element={<DetailsPage />} />
         <Route path="/venue" element={<VenuePage />} />
-        <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/travel" element={<TravelPage />} />
         <Route path="/rsvp" element={<RSVPPage />} />
-        <Route path="/registry" element={<RegistryPage />} />
       </Routes>
     </>
   );
@@ -82,6 +65,8 @@ const AppWrapper = () => {
 
 function App() {
   const [imagesLoaded, setImagesLoaded] = useState(false);
+  // Add a constant to control router type - set to true if you have routing issues
+  const useHashRouter = false; 
   
   useEffect(() => {
     // Preload common images
@@ -163,13 +148,25 @@ function App() {
   }
   
   return (
-    <Router>
-      <CursorProvider>
-        <GlobalStyle />
-        <CustomCursor enabled={true} />
-        <AppWrapper />
-      </CursorProvider>
-    </Router>
+    <>
+      {useHashRouter ? (
+        <HashRouter>
+          <CursorProvider>
+            <GlobalStyle />
+            <CustomCursor enabled={true} />
+            <AppWrapper />
+          </CursorProvider>
+        </HashRouter>
+      ) : (
+        <Router>
+          <CursorProvider>
+            <GlobalStyle />
+            <CustomCursor enabled={true} />
+            <AppWrapper />
+          </CursorProvider>
+        </Router>
+      )}
+    </>
   );
 }
 

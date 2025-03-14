@@ -82,13 +82,10 @@ const Navigation: React.FC<NavigationProps> = ({ currentPath }) => {
         <Logo to="/">E&T</Logo>
         <NavLinks>
           <NavLink to="/" active={currentPath === '/'}>Home</NavLink>
-          <NavLink to="/our-story" active={currentPath === '/our-story'}>Our Story</NavLink>
           <NavLink to="/details" active={currentPath === '/details'}>Details</NavLink>
           <NavLink to="/venue" active={currentPath === '/venue'}>Venue</NavLink>
-          <NavLink to="/gallery" active={currentPath === '/gallery'}>Gallery</NavLink>
           <NavLink to="/travel" active={currentPath === '/travel'}>Travel</NavLink>
           <NavLink to="/rsvp" active={currentPath === '/rsvp'}>RSVP</NavLink>
-          <NavLink to="/registry" active={currentPath === '/registry'}>Registry</NavLink>
         </NavLinks>
       </NavInner>
     </NavContainer>
