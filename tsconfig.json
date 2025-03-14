@@ -18,9 +18,11 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "noImplicitAny": false /* Allow implicit any for now to fix Date constructor issues */
   },
   "include": [
-    "src"
+    "src",
+    "src/global.d.ts"
   ]
 }

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Flower Icon</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle cx="12" cy="12" r="3" fill="#1E88E5"></circle>
+        <path d="M12,2 C13.5,3.5 15,6 15,9 C15,6 16.5,3.5 18,2 C16.5,3.5 15,6 15,9 C18,9 20.5,7.5 22,6 C20.5,7.5 18,9 15,9 C15,12 16.5,14.5 18,16 C16.5,14.5 15,12 15,9 C15,12 13.5,14.5 12,16 C13.5,14.5 15,12 15,9 C12,9 9.5,7.5 8,6 C9.5,7.5 12,9 15,9 C15,6 13.5,3.5 12,2 Z" fill="#64B5F6"></path>
+    </g>
+</svg> 

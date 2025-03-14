@@ -1,46 +1,104 @@
-# Getting Started with Create React App
+# Elaine & Toby's Wedding Website - Custom Cursor
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+This project implements a luxurious, culturally-inspired custom cursor system for Elaine & Toby's wedding website. The cursor blends Filipino and Australian design elements with a rusty blue color theme as the primary palette.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- 🖱️ **Elegant Custom Cursor**: A sophisticated cursor system with dot, ring, and trail elements
+- 🌈 **Cultural Design Elements**: Incorporates design elements and colors from Filipino and Australian cultures
+- 🔄 **Context-Aware Transformations**: Cursor changes based on the element being hovered (buttons, images, videos, forms, links)
+- ✨ **Smooth Animations**: Fluid motion with spring effects, delays, and transitions
+- 📝 **Text Labels**: Contextual text labels that appear when hovering over interactive elements
+- 📱 **Accessibility Considerations**: Fallbacks and options for users who prefer standard cursors
 
-### `npm start`
+## Technology Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **React**: Frontend framework with TypeScript
+- **Styled Components**: CSS-in-JS styling
+- **GSAP**: Animation library for smooth cursor movements
+- **Framer Motion**: React animation library for specialized transitions
+- **anime.js**: Timeline-based animations for complex effects
+- **react-spring**: Physics-based animations for natural cursor movement
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Custom Cursor Components
 
-### `npm test`
+The custom cursor consists of several elements:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+1. **Main Cursor Dot**: A small circular dot that follows the mouse cursor precisely
+2. **Cursor Ring**: A larger ring that follows with a slight delay, creating an elegant trailing effect
+3. **Background Trail**: A subtle glow that follows with significant delay
+4. **Text Labels**: Contextual text that appears when hovering over interactive elements
 
-### `npm run build`
+## Cursor Transformations
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The cursor transforms based on the element being hovered:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- **Buttons & CTAs**: Transforms to a circle with increased brightness and "Click" text
+- **Gallery Areas**: Transforms into a magnifying glass with "View" text
+- **Form Fields**: Transforms into a thin I-beam cursor
+- **Navigation Elements**: Grows larger with directional indication
+- **Videos**: Transforms into a play button shape with "Watch" text
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Cultural Design Elements
 
-### `npm run eject`
+The cursor incorporates cultural elements from:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+- **Filipino Culture**: Blue and red accents, sampaguita flower motifs, wave patterns
+- **Australian Culture**: Blue and red accents, Southern Cross star patterns, boomerang-shaped trails
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Usage
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+To add cursor interactions to any component, wrap it with the `CursorElement` component:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```jsx
+<CursorElement
+  cursorType="button"
+  cursorText="Click"
+  cursorTheme="rustyBlue"
+  cursorIntensity="medium"
+  cursorTexture="weathered"
+  cursorAccent="cultural"
+>
+  <Button>RSVP Now</Button>
+</CursorElement>
+```
 
-## Learn More
+## Available Props
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+The `CursorElement` component accepts the following props:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- **cursorType**: The type of cursor to display ('default', 'button', 'gallery', 'video', 'link', 'form')
+- **cursorText**: Text to display near the cursor when hovering
+- **cursorTheme**: The color theme to use ('rustyBlue', 'filipino', 'australian')
+- **cursorIntensity**: The intensity of the cursor effect ('low', 'medium', 'high')
+- **cursorTexture**: The texture style to apply ('smooth', 'weathered', 'patina', 'vintage')
+- **cursorAccent**: Additional accent styling (e.g., 'cultural')
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies: `npm install`
+3. Start the development server: `npm start`
+4. Open [http://localhost:3000](http://localhost:3000) to view the demo
+
+## Customization
+
+The cursor system is highly customizable through the constants defined in `src/constants/theme.ts`. You can adjust colors, sizes, animations, and timing to achieve different effects.
+
+## Accessibility
+
+For users who prefer standard cursors or who use assistive technologies, the custom cursor can be disabled by setting the `enabled` prop to `false` on the `CustomCursor` component.
+
+## Credits
+
+- Design and Implementation: [Your Name]
+- Inspired by Filipino and Australian cultural elements
+- Created for Elaine & Toby's Wedding
+
+### Travel Page
+- Information about flights to Manila from various international locations
+- Domestic flight options within the Philippines to popular tourist destinations
+- Hotel recommendations near the wedding venue
+- Transportation options in Manila
+- Helpful travel tips for international and domestic travel
+- Interactive elements like clickable airline logos and a Skyscanner widget

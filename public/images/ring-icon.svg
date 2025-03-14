@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="24px" height="24px" viewBox="0 0 24 24" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    <title>Wedding Ring Icon</title>
+    <g stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <circle cx="12" cy="12" r="8" stroke="#1E88E5" stroke-width="2" fill="none"></circle>
+        <circle cx="12" cy="12" r="5" stroke="#64B5F6" stroke-width="1.5" fill="none"></circle>
+        <circle cx="12" cy="12" r="2" fill="#BBDEFB"></circle>
+    </g>
+</svg> 

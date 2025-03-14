@@ -1,0 +1,1862 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react';
+import styled, { keyframes, css } from 'styled-components';
+import { COLORS, ANIMATION, EASING } from '../constants/theme';
+import CursorElement from '../components/CursorElement';
+import WeddingAnimations from '../components/WeddingAnimations';
+
+// Animation keyframes
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const slideInRight = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const slideInLeft = keyframes`
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+`;
+
+const pulseAnimation = keyframes`
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+`;
+
+const floatAnimation = keyframes`
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+`;
+
+const glowAnimation = keyframes`
+  0% {
+    box-shadow: 0 0 5px rgba(30, 136, 229, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(30, 136, 229, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 5px rgba(30, 136, 229, 0.5);
+  }
+`;
+
+const rotateAnimation = keyframes`
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+`;
+
+const floatingHearts = keyframes`
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(var(--translate-x), -100vh) rotate(var(--rotate-deg));
+    opacity: 0;
+  }
+`;
+
+const expandAnimation = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+`;
+
+// Add new animations for FAQ section
+const bounceAnimation = keyframes`
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+`;
+
+const highlightAnimation = keyframes`
+  0% {
+    background-position: -100% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+`;
+
+// Add new animations for the timeline
+const timelineItemAppear = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const timelineDotPulse = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(30, 136, 229, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(30, 136, 229, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(30, 136, 229, 0);
+  }
+`;
+
+const timelineProgressGrow = keyframes`
+  from {
+    height: 0%;
+  }
+  to {
+    height: var(--progress-height);
+  }
+`;
+
+// Styled components
+const PageContainer = styled.div`
+  max-width: 100%;
+  overflow-x: hidden;
+  font-family: 'Playfair Display', serif;
+  position: relative;
+`;
+
+const HeroSection = styled.section`
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, ${COLORS.LIGHT_RUSTY_BLUE}40 0%, ${COLORS.PRIMARY_RUSTY_BLUE}40 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+`;
+
+const HeroContent = styled.div`
+  text-align: center;
+  z-index: 2;
+  animation: ${fadeIn} 1.5s ${EASING.HOVER_TRANSITION};
+  position: relative;
+`;
+
+const HeroTitle = styled.h1`
+  font-size: 4.5rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+  text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.5);
+  
+  @media (max-width: 768px) {
+    font-size: 3rem;
+  }
+`;
+
+const HeroSubtitle = styled.h2`
+  font-size: 2rem;
+  margin-bottom: 2rem;
+  font-weight: 400;
+  text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.5);
+  
+  @media (max-width: 768px) {
+    font-size: 1.5rem;
+  }
+`;
+
+const FloatingHeart = styled.div<{ size: number; delay: number; left: number }>`
+  position: absolute;
+  width: ${props => props.size}px;
+  height: ${props => props.size}px;
+  background-image: url('/images/heart.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  top: -50px;
+  left: ${props => props.left}%;
+  opacity: 0.6;
+  animation: float ${props => 6 + props.delay}s ease-in-out infinite;
+  animation-delay: ${props => props.delay}s;
+  will-change: transform;
+  transform: translateZ(0);
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg) translateZ(0);
+    }
+    50% {
+      transform: translateY(100px) rotate(10deg) translateZ(0);
+    }
+  }
+`;
+
+const ParallaxLayer = styled.div<{ depth: number; image: string }>`
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: ${props => `url(${props.image})`};
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: ${props => props.depth < 0 ? 'right bottom' : 'left bottom'};
+  opacity: 0.6;
+  z-index: ${props => props.depth};
+  will-change: transform;
+  transform: translateZ(0);
+`;
+
+const ScrollIndicator = styled.div`
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  animation: ${floatAnimation} 2s infinite ease-in-out;
+  z-index: 10;
+`;
+
+const ScrollText = styled.span`
+  font-size: 1rem;
+  margin-bottom: 8px;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+`;
+
+const ScrollArrow = styled.div`
+  width: 20px;
+  height: 20px;
+  border-right: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(45deg);
+`;
+
+const ContentSection = styled.section<{ bgColor?: string }>`
+  padding: 100px 5%;
+  background-color: ${props => props.bgColor || 'white'};
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 100px;
+    background: linear-gradient(to bottom, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+    z-index: 2;
+  }
+`;
+
+const SectionTitle = styled.h2`
+  font-size: 2.5rem;
+  text-align: center;
+  margin-bottom: 70px;
+  color: ${COLORS.PRIMARY_RUSTY_BLUE};
+  position: relative;
+  
+  &:after {
+    content: '';
+    position: absolute;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background-color: ${COLORS.RUSTY_HIGHLIGHT};
+  }
+  
+  @media (max-width: 768px) {
+    font-size: 2rem;
+  }
+`;
+
+const DetailsContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  perspective: 1000px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+  }
+`;
+
+const DetailCard = styled.div<{ delay: number; isFlipped: boolean }>`
+  flex: 0 0 calc(33.333% - 30px);
+  height: 400px;
+  margin: 0 15px 40px;
+  position: relative;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  opacity: 0;
+  animation: ${fadeIn} 0.8s ${EASING.HOVER_TRANSITION} forwards;
+  animation-delay: ${props => props.delay * 0.2}s;
+  transform: ${props => props.isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)'};
+  perspective: 1000px;
+  cursor: pointer;
+  
+  @media (max-width: 1024px) {
+    flex: 0 0 calc(50% - 30px);
+  }
+  
+  @media (max-width: 768px) {
+    flex: 0 0 calc(100% - 30px);
+    max-width: 400px;
+  }
+`;
+
+const CardSide = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+  
+  &:hover {
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const CardFront = styled(CardSide)`
+  background-color: white;
+  transform: rotateY(0deg);
+  display: flex;
+  flex-direction: column;
+`;
+
+const CardBack = styled(CardSide)`
+  background-color: ${COLORS.RUSTY_HIGHLIGHT};
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  text-align: center;
+`;
+
+const DetailCardImage = styled.div<{ bgImage: string }>`
+  height: 200px;
+  background-image: url(${props => props.bgImage});
+  background-size: cover;
+  background-position: center;
+`;
+
+const DetailCardContent = styled.div`
+  padding: 25px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+`;
+
+const DetailCardTitle = styled.h3`
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: ${COLORS.DARK_RUSTY_BLUE};
+`;
+
+const DetailCardText = styled.p`
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 20px;
+  flex: 1;
+`;
+
+const DetailCardTime = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  color: ${COLORS.PRIMARY_RUSTY_BLUE};
+  font-weight: 600;
+  
+  svg {
+    margin-right: 10px;
+  }
+`;
+
+const FlipButton = styled.button`
+  background-color: ${COLORS.PRIMARY_RUSTY_BLUE};
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  font-family: 'Playfair Display', serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 15px;
+  align-self: center;
+  
+  &:hover {
+    background-color: ${COLORS.RUSTY_BLUE_ACCENT};
+    transform: translateY(-3px);
+  }
+  
+  svg {
+    margin-right: 5px;
+  }
+`;
+
+const BackCardTitle = styled.h3`
+  font-size: 1.8rem;
+  margin-bottom: 20px;
+  color: ${COLORS.DARK_RUSTY_BLUE};
+`;
+
+const BackCardContent = styled.div`
+  font-size: 1.2rem;
+  line-height: 1.8;
+  color: ${COLORS.DARK_RUSTY_BLUE};
+  margin-bottom: 30px;
+`;
+
+const BackCardIcon = styled.div`
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  animation: ${expandAnimation} 3s infinite ease-in-out;
+  
+  svg {
+    width: 30px;
+    height: 30px;
+    fill: ${COLORS.PRIMARY_RUSTY_BLUE};
+  }
+`;
+
+const DetailDecorationElement = styled.div`
+  position: absolute;
+  width: 150px;
+  height: 150px;
+  background-image: url('/images/rusty-blue-decoration.svg');
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.1;
+  z-index: -1;
+`;
+
+const TopRightDecoration = styled(DetailDecorationElement)`
+  top: 50px;
+  right: 50px;
+  transform: rotate(45deg);
+`;
+
+const BottomLeftDecoration = styled(DetailDecorationElement)`
+  bottom: 50px;
+  left: 50px;
+  transform: rotate(-45deg);
+`;
+
+const TimelineSection = styled.section`
+  padding: 100px 5%;
+  background-color: ${COLORS.RUSTY_HIGHLIGHT};
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+`;
+
+const TimelineContainer = styled.div`
+  max-width: 900px;
+  margin: 0 auto;
+  position: relative;
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 100%;
+    background-color: ${COLORS.PRIMARY_RUSTY_BLUE};
+    
+    @media (max-width: 768px) {
+      left: 30px;
+    }
+  }
+`;
+
+const TimelineItem = styled.div<{ isLeft: boolean; delay: number; isActive: boolean }>`
+  display: flex;
+  justify-content: ${props => props.isLeft ? 'flex-start' : 'flex-end'};
+  margin-bottom: 60px;
+  position: relative;
+  opacity: 0;
+  animation: ${timelineItemAppear} 0.8s ${EASING.HOVER_TRANSITION} forwards;
+  animation-delay: ${props => props.delay * 0.2}s;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  ${props => props.isActive && css`
+    transform: scale(1.05);
+  `}
+  
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+    padding-left: 60px;
+  }
+`;
+
+const TimelineDot = styled.div<{ isActive: boolean }>`
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: ${props => props.isActive ? '30px' : '20px'};
+  height: ${props => props.isActive ? '30px' : '20px'};
+  border-radius: 50%;
+  background-color: ${props => props.isActive ? COLORS.RUSTY_BLUE_ACCENT : COLORS.PRIMARY_RUSTY_BLUE};
+  z-index: 2;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  cursor: pointer;
+  
+  ${props => props.isActive && css`
+    animation: ${timelineDotPulse} 2s infinite;
+  `}
+  
+  &:hover {
+    transform: translateX(-50%) scale(1.2);
+  }
+  
+  @media (max-width: 768px) {
+    left: 30px;
+  }
+`;
+
+const TimelineContent = styled.div<{ isLeft: boolean; isActive: boolean }>`
+  width: 45%;
+  background-color: white;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  position: relative;
+  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  ${props => props.isActive && css`
+    background-color: #f8f9fa;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transform: translateY(-5px);
+  `}
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    ${props => props.isLeft ? css`right: -10px;` : css`left: -10px;`}
+    width: 20px;
+    height: 20px;
+    background-color: ${props => props.isActive ? '#f8f9fa' : 'white'};
+    transform: rotate(45deg);
+    transition: background-color 0.3s ease;
+    
+    @media (max-width: 768px) {
+      left: -10px;
+      right: auto;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    width: 100%;
+  }
+`;
+
+const TimelineTime = styled.div<{ isActive: boolean }>`
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: ${props => props.isActive ? COLORS.RUSTY_BLUE_ACCENT : COLORS.PRIMARY_RUSTY_BLUE};
+  margin-bottom: 10px;
+  transition: color 0.3s ease;
+  display: flex;
+  align-items: center;
+`;
+
+const TimelineTitle = styled.h3<{ isActive: boolean }>`
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  color: ${props => props.isActive ? COLORS.RUSTY_BLUE_ACCENT : COLORS.DARK_RUSTY_BLUE};
+  transition: color 0.3s ease;
+`;
+
+const TimelineText = styled.p`
+  font-size: 1.1rem;
+  line-height: 1.6;
+  color: #555;
+`;
+
+const TimelineIcon = styled.div<{ isActive: boolean }>`
+  width: 24px;
+  height: 24px;
+  margin-right: 10px;
+  border-radius: 50%;
+  background-color: ${props => props.isActive ? COLORS.RUSTY_BLUE_ACCENT : COLORS.PRIMARY_RUSTY_BLUE};
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease;
+  
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: white;
+    ${props => props.isActive && css`
+      animation: ${rotateAnimation} 4s linear infinite;
+    `}
+  }
+`;
+
+const TimelineProgress = styled.div`
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  background-color: ${COLORS.RUSTY_BLUE_ACCENT};
+  z-index: 1;
+  --progress-height: 0%;
+  height: var(--progress-height);
+  animation: ${timelineProgressGrow} 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  
+  @media (max-width: 768px) {
+    left: 30px;
+  }
+`;
+
+const TimelineControls = styled.div`
+  display: flex;
+  justify-content: center;
+  margin-top: 40px;
+  gap: 20px;
+`;
+
+const TimelineButton = styled.button`
+  background-color: ${COLORS.PRIMARY_RUSTY_BLUE};
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 12px 25px;
+  font-size: 1rem;
+  font-family: 'Playfair Display', serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background-color: ${COLORS.RUSTY_BLUE_ACCENT};
+    transform: translateY(-3px);
+  }
+  
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+  }
+  
+  svg {
+    margin-right: 8px;
+  }
+`;
+
+// FAQ Section styled components
+const FAQSection = styled.section`
+  padding: 100px 5%;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, #f8f9fa 0%, white 50%, #f8f9fa 100%);
+`;
+
+const FAQContainer = styled.div`
+  max-width: 900px;
+  margin: 50px auto 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 30px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const FAQItem = styled.div<{ delay: number; isOpen: boolean }>`
+  margin-bottom: 20px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: ${props => props.isOpen 
+    ? '0 15px 30px rgba(30, 136, 229, 0.2)' 
+    : '0 5px 15px rgba(0, 0, 0, 0.05)'};
+  opacity: 0;
+  animation: ${fadeIn} 0.8s ${EASING.HOVER_TRANSITION} forwards;
+  animation-delay: ${props => props.delay * 0.15}s;
+  transition: all 0.3s ease;
+  transform: ${props => props.isOpen ? 'scale(1.03)' : 'scale(1)'};
+  position: relative;
+  
+  &:hover {
+    transform: ${props => props.isOpen ? 'scale(1.03)' : 'translateY(-5px)'};
+  }
+  
+  &:before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5px;
+    height: 100%;
+    background-color: ${props => props.isOpen ? COLORS.PRIMARY_RUSTY_BLUE : 'transparent'};
+    transition: background-color 0.3s ease;
+  }
+`;
+
+const FAQQuestion = styled.div<{ isOpen: boolean }>`
+  background-color: ${props => props.isOpen ? COLORS.PRIMARY_RUSTY_BLUE : 'white'};
+  color: ${props => props.isOpen ? 'white' : COLORS.DARK_RUSTY_BLUE};
+  padding: 20px 30px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+  
+  &:hover {
+    background-color: ${props => props.isOpen ? COLORS.PRIMARY_RUSTY_BLUE : COLORS.RUSTY_HIGHLIGHT};
+  }
+  
+  ${props => props.isOpen && css`
+    &:after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, 
+        rgba(255,255,255,0) 0%, 
+        rgba(255,255,255,0.1) 50%, 
+        rgba(255,255,255,0) 100%);
+      background-size: 200% 100%;
+      animation: ${highlightAnimation} 1.5s ease-in-out;
+    }
+  `}
+`;
+
+const FAQAnswer = styled.div<{ isOpen: boolean }>`
+  background-color: white;
+  padding: ${props => props.isOpen ? '25px 30px' : '0 30px'};
+  font-size: 1.1rem;
+  line-height: 1.8;
+  color: #555;
+  max-height: ${props => props.isOpen ? '500px' : '0'};
+  overflow: hidden;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+`;
+
+const FAQIcon = styled.span<{ isOpen: boolean }>`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: ${props => props.isOpen ? 'white' : COLORS.RUSTY_HIGHLIGHT};
+  color: ${props => props.isOpen ? COLORS.PRIMARY_RUSTY_BLUE : COLORS.DARK_RUSTY_BLUE};
+  transform: ${props => props.isOpen ? 'rotate(45deg)' : 'rotate(0)'};
+  transition: all 0.3s;
+  font-size: 1.5rem;
+  font-weight: 300;
+  line-height: 0.7;
+`;
+
+const FAQCategory = styled.div<{ category: string }>`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  font-size: 0.8rem;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background-color: ${props => {
+    switch(props.category) {
+      case 'venue': return 'rgba(30, 136, 229, 0.1)';
+      case 'attire': return 'rgba(233, 30, 99, 0.1)';
+      case 'logistics': return 'rgba(76, 175, 80, 0.1)';
+      case 'accommodations': return 'rgba(255, 152, 0, 0.1)';
+      default: return 'rgba(30, 136, 229, 0.1)';
+    }
+  }};
+  color: ${props => {
+    switch(props.category) {
+      case 'venue': return COLORS.PRIMARY_RUSTY_BLUE;
+      case 'attire': return '#E91E63';
+      case 'logistics': return '#4CAF50';
+      case 'accommodations': return '#FF9800';
+      default: return COLORS.PRIMARY_RUSTY_BLUE;
+    }
+  }};
+`;
+
+const FAQSearchContainer = styled.div`
+  max-width: 600px;
+  margin: 0 auto 40px;
+  position: relative;
+`;
+
+const FAQSearchInput = styled.input`
+  width: 100%;
+  padding: 15px 20px;
+  padding-left: 50px;
+  border: 2px solid ${COLORS.RUSTY_HIGHLIGHT};
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-family: 'Playfair Display', serif;
+  color: ${COLORS.DARK_RUSTY_BLUE};
+  transition: all 0.3s;
+  
+  &:focus {
+    outline: none;
+    border-color: ${COLORS.PRIMARY_RUSTY_BLUE};
+    box-shadow: 0 5px 15px rgba(30, 136, 229, 0.1);
+  }
+  
+  &::placeholder {
+    color: #aaa;
+  }
+`;
+
+const SearchIcon = styled.div`
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: ${COLORS.PRIMARY_RUSTY_BLUE};
+`;
+
+const NoResultsMessage = styled.div`
+  text-align: center;
+  padding: 30px;
+  font-size: 1.2rem;
+  color: #888;
+  animation: ${bounceAnimation} 2s ease infinite;
+`;
+
+const FAQCategoryFilter = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 30px;
+`;
+
+const CategoryButton = styled.button<{ isActive: boolean; category: string }>`
+  padding: 8px 15px;
+  border-radius: 20px;
+  border: none;
+  font-family: 'Playfair Display', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  background-color: ${props => {
+    if (props.isActive) {
+      switch(props.category) {
+        case 'venue': return COLORS.PRIMARY_RUSTY_BLUE;
+        case 'attire': return '#E91E63';
+        case 'logistics': return '#4CAF50';
+        case 'accommodations': return '#FF9800';
+        case 'all': return COLORS.DARK_RUSTY_BLUE;
+        default: return COLORS.PRIMARY_RUSTY_BLUE;
+      }
+    } else {
+      return '#f1f1f1';
+    }
+  }};
+  color: ${props => props.isActive ? 'white' : '#666'};
+  
+  &:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+  }
+`;
+
+// Optimize the throttle function with a more efficient implementation
+const throttle = (func: Function, limit: number) => {
+  let inThrottle: boolean = false;
+  let lastFunc: ReturnType<typeof setTimeout>;
+  let lastRan: number = 0;
+  
+  return function(this: any, ...args: any[]) {
+    const context = this;
+    
+    if (!inThrottle) {
+      func.apply(context, args);
+      lastRan = Date.now();
+      inThrottle = true;
+      
+      setTimeout(() => {
+        inThrottle = false;
+      }, limit);
+    } else {
+      clearTimeout(lastFunc);
+      lastFunc = setTimeout(() => {
+        if (Date.now() - lastRan >= limit) {
+          func.apply(context, args);
+          lastRan = Date.now();
+        }
+      }, limit - (Date.now() - lastRan));
+    }
+  };
+};
+
+// Create optimized sub-components with React.memo to prevent unnecessary re-renders
+
+// Optimized FAQ Item component
+const MemoizedFAQItem = React.memo(({ 
+  faq, 
+  index, 
+  isOpen, 
+  toggleFAQ 
+}: { 
+  faq: { question: string; answer: string; category: string }; 
+  index: number; 
+  isOpen: boolean; 
+  toggleFAQ: (index: number) => void;
+}) => (
+  <FAQItem key={index} delay={index} isOpen={isOpen}>
+    <CursorElement cursorType="button" cursorText="Toggle" cursorTheme="rustyBlue">
+      <FAQQuestion 
+        isOpen={isOpen}
+        onClick={() => toggleFAQ(index)}
+      >
+        {faq.question}
+        <FAQIcon isOpen={isOpen}>+</FAQIcon>
+      </FAQQuestion>
+    </CursorElement>
+    <FAQAnswer isOpen={isOpen}>
+      {faq.answer}
+      <FAQCategory category={faq.category}>
+        {faq.category.charAt(0).toUpperCase() + faq.category.slice(1)}
+      </FAQCategory>
+    </FAQAnswer>
+  </FAQItem>
+));
+
+// Optimized Timeline Item component
+const MemoizedTimelineItem = React.memo(({
+  item,
+  index,
+  isLeft,
+  isActive,
+  handleTimelineDotClick
+}: {
+  item: { time: string; title: string; description: string };
+  index: number;
+  isLeft: boolean;
+  isActive: boolean;
+  handleTimelineDotClick: (index: number) => void;
+}) => (
+  <React.Fragment>
+    <CursorElement cursorType="button" cursorText="View" cursorTheme="rustyBlue">
+      <TimelineDot 
+        isActive={isActive}
+        onClick={() => handleTimelineDotClick(index)}
+      />
+    </CursorElement>
+    
+    <TimelineItem 
+      isLeft={isLeft} 
+      delay={index}
+      isActive={isActive}
+    >
+      <TimelineContent 
+        isLeft={isLeft}
+        isActive={isActive}
+      >
+        <TimelineTime isActive={isActive}>
+          <TimelineIcon isActive={isActive}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill="white" />
+              <path d="M12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill="white" />
+            </svg>
+          </TimelineIcon>
+          {item.time}
+        </TimelineTime>
+        <TimelineTitle isActive={isActive}>{item.title}</TimelineTitle>
+        <TimelineText>{item.description}</TimelineText>
+      </TimelineContent>
+    </TimelineItem>
+  </React.Fragment>
+));
+
+// Optimized Detail Card component
+const MemoizedDetailCard = React.memo(({
+  detail,
+  index,
+  isFlipped,
+  toggleCardFlip,
+  backData
+}: {
+  detail: { title: string; description: string; image: string; time: string };
+  index: number;
+  isFlipped: boolean;
+  toggleCardFlip: (index: number) => void;
+  backData: { title: string; content: string; icon: string };
+}) => (
+  <DetailCard 
+    key={index} 
+    delay={index}
+    isFlipped={isFlipped}
+  >
+    <CardFront>
+      <DetailCardImage bgImage={detail.image} />
+      <DetailCardContent>
+        <DetailCardTitle>{detail.title}</DetailCardTitle>
+        <DetailCardText>{detail.description}</DetailCardText>
+        <DetailCardTime>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2C6.5 2 2 6.5 2 12C2 17.5 6.5 22 12 22C17.5 22 22 17.5 22 12C22 6.5 17.5 2 12 2Z" fill={COLORS.PRIMARY_RUSTY_BLUE} />
+            <path d="M12 4C7.59 4 4 7.59 4 12C4 16.41 7.59 20 12 20C16.41 20 20 16.41 20 12C20 7.59 16.41 4 12 4ZM12.5 7H11V13L16.2 16.2L17 14.9L12.5 12.2V7Z" fill={COLORS.PRIMARY_RUSTY_BLUE} />
+          </svg>
+          {detail.time}
+        </DetailCardTime>
+        
+        <CursorElement cursorType="button" cursorText="Flip" cursorTheme="rustyBlue">
+          <FlipButton onClick={() => toggleCardFlip(index)}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z" fill="white" />
+            </svg>
+            More Info
+          </FlipButton>
+        </CursorElement>
+      </DetailCardContent>
+    </CardFront>
+    
+    <CardBack>
+      <BackCardIcon>
+        {backData.icon}
+      </BackCardIcon>
+      <BackCardTitle>{backData.title}</BackCardTitle>
+      <BackCardContent>{backData.content}</BackCardContent>
+      
+      <CursorElement cursorType="button" cursorText="Flip Back" cursorTheme="rustyBlue">
+        <FlipButton onClick={() => toggleCardFlip(index)}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 8l-4 4h3c0 3.31-2.69 6-6 6-1.01 0-1.97-.25-2.8-.7l-1.46 1.46C8.97 19.54 10.43 20 12 20c4.42 0 8-3.58 8-8h3l-4-4zM6 12c0-3.31 2.69-6 6-6 1.01 0 1.97.25 2.8.7l1.46-1.46C15.03 4.46 13.57 4 12 4c-4.42 0-8 3.58-8 8H1l4 4 4-4H6z" fill="white" />
+          </svg>
+          Back to Front
+        </FlipButton>
+      </CursorElement>
+    </CardBack>
+  </DetailCard>
+));
+
+// Create a loading component for Suspense fallback
+const LoadingSection = styled.div`
+  min-height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: ${props => props.color || 'white'};
+  padding: 50px 0;
+`;
+
+// Define inline components for lazy loading fallback
+const TimelineSectionComponent = ({ 
+  timelineData, 
+  activeTimelineIndex, 
+  timelineProgress, 
+  handleTimelineDotClick,
+  goToPrevTimelineItem,
+  goToNextTimelineItem,
+  isTimelineAutoPlaying,
+  startTimelineAutoPlay,
+  stopTimelineAutoPlay
+}) => (
+  <TimelineSection>
+    <SectionTitle>Wedding Day Timeline</SectionTitle>
+    <TimelineContainer>
+      <TimelineProgress 
+        className="timeline-progress" 
+        style={{ height: `${timelineProgress}%` }} 
+      />
+      
+      {timelineData.map((item, index) => (
+        <MemoizedTimelineItem
+          key={index}
+          item={item}
+          index={index}
+          isLeft={index % 2 === 0}
+          isActive={activeTimelineIndex === index}
+          handleTimelineDotClick={handleTimelineDotClick}
+        />
+      ))}
+    </TimelineContainer>
+    
+    <TimelineControls>
+      <CursorElement cursorType="button" cursorText="Previous" cursorTheme="rustyBlue">
+        <TimelineButton 
+          onClick={goToPrevTimelineItem}
+          disabled={activeTimelineIndex === 0}
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.41 7.41L14 6L8 12L14 18L15.41 16.59L10.83 12L15.41 7.41Z" fill="white" />
+          </svg>
+          Previous
+        </TimelineButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText={isTimelineAutoPlaying ? "Pause" : "Play"} cursorTheme="rustyBlue">
+        <TimelineButton 
+          onClick={isTimelineAutoPlaying ? stopTimelineAutoPlay : startTimelineAutoPlay}
+          disabled={activeTimelineIndex === timelineData.length - 1 && !isTimelineAutoPlaying}
+        >
+          {isTimelineAutoPlaying ? (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" fill="white" />
+              </svg>
+              Pause
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M8 5v14l11-7z" fill="white" />
+              </svg>
+              Play
+            </>
+          )}
+        </TimelineButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText="Next" cursorTheme="rustyBlue">
+        <TimelineButton 
+          onClick={goToNextTimelineItem}
+          disabled={activeTimelineIndex === timelineData.length - 1}
+        >
+          Next
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8.59 16.59L10 18L16 12L10 6L8.59 7.41L13.17 12L8.59 16.59Z" fill="white" />
+          </svg>
+        </TimelineButton>
+      </CursorElement>
+    </TimelineControls>
+  </TimelineSection>
+);
+
+const FAQSectionComponent = ({ 
+  faqData, 
+  openFAQ, 
+  toggleFAQ, 
+  faqSearchQuery, 
+  setFaqSearchQuery, 
+  faqCategory, 
+  setFaqCategory,
+  filteredFaqs
+}) => (
+  <FAQSection>
+    <SectionTitle>Frequently Asked Questions</SectionTitle>
+    
+    <FAQSearchContainer>
+      <SearchIcon>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" fill={COLORS.PRIMARY_RUSTY_BLUE} />
+        </svg>
+      </SearchIcon>
+      <FAQSearchInput 
+        type="text" 
+        placeholder="Search questions..." 
+        value={faqSearchQuery}
+        onChange={(e) => setFaqSearchQuery(e.target.value)}
+      />
+    </FAQSearchContainer>
+    
+    <FAQCategoryFilter>
+      <CursorElement cursorType="button" cursorText="All" cursorTheme="rustyBlue">
+        <CategoryButton 
+          isActive={faqCategory === 'all'} 
+          category="all"
+          onClick={() => setFaqCategory('all')}
+        >
+          All Questions
+        </CategoryButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText="Venue" cursorTheme="rustyBlue">
+        <CategoryButton 
+          isActive={faqCategory === 'venue'} 
+          category="venue"
+          onClick={() => setFaqCategory('venue')}
+        >
+          Venue
+        </CategoryButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText="Attire" cursorTheme="rustyBlue">
+        <CategoryButton 
+          isActive={faqCategory === 'attire'} 
+          category="attire"
+          onClick={() => setFaqCategory('attire')}
+        >
+          Attire
+        </CategoryButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText="Logistics" cursorTheme="rustyBlue">
+        <CategoryButton 
+          isActive={faqCategory === 'logistics'} 
+          category="logistics"
+          onClick={() => setFaqCategory('logistics')}
+        >
+          Logistics
+        </CategoryButton>
+      </CursorElement>
+      
+      <CursorElement cursorType="button" cursorText="Accommodations" cursorTheme="rustyBlue">
+        <CategoryButton 
+          isActive={faqCategory === 'accommodations'} 
+          category="accommodations"
+          onClick={() => setFaqCategory('accommodations')}
+        >
+          Accommodations
+        </CategoryButton>
+      </CursorElement>
+    </FAQCategoryFilter>
+    
+    <FAQContainer>
+      {filteredFaqs.length > 0 ? (
+        filteredFaqs.map((faq, index) => (
+          <MemoizedFAQItem
+            key={index}
+            faq={faq}
+            index={index}
+            isOpen={openFAQ === index}
+            toggleFAQ={toggleFAQ}
+          />
+        ))
+      ) : (
+        <NoResultsMessage>
+          No questions found matching your search. Try different keywords or clear the search.
+        </NoResultsMessage>
+      )}
+    </FAQContainer>
+  </FAQSection>
+);
+
+// Lazy load sections that are not immediately visible
+const LazyTimelineSection = lazy(() => 
+  Promise.all([
+    // Add artificial delay to ensure smooth loading
+    new Promise(resolve => setTimeout(resolve, 100)),
+    Promise.resolve({
+      default: (props) => <TimelineSectionComponent {...props} />
+    })
+  ]).then(([_, module]) => module)
+);
+
+const LazyFAQSection = lazy(() => 
+  Promise.all([
+    // Add artificial delay to ensure smooth loading
+    new Promise(resolve => setTimeout(resolve, 100)),
+    Promise.resolve({
+      default: (props) => <FAQSectionComponent {...props} />
+    })
+  ]).then(([_, module]) => module)
+);
+
+const DetailsPage: React.FC = () => {
+  // Refs for scroll functionality
+  const detailsRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLDivElement>(null);
+  
+  // FAQ state
+  const [openFAQ, setOpenFAQ] = useState<number | null>(null);
+  
+  // Timeline state
+  const [activeTimelineIndex, setActiveTimelineIndex] = useState<number>(0);
+  const [timelineProgress, setTimelineProgress] = useState<number>(0);
+  const [isTimelineAutoPlaying, setIsTimelineAutoPlaying] = useState<boolean>(false);
+  const timelineAutoPlayRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Animation on scroll
+  const [isVisible, setIsVisible] = useState<{ [key: string]: boolean }>({
+    details: false,
+    timeline: false,
+    faq: false
+  });
+  
+  // Use requestAnimationFrame for parallax effect instead of scroll event
+  const [scrollY, setScrollY] = useState(0);
+  const ticking = useRef(false);
+  
+  // State for flipped cards
+  const [flippedCards, setFlippedCards] = useState<number[]>([]);
+  
+  // FAQ search and filter state
+  const [faqSearchQuery, setFaqSearchQuery] = useState('');
+  const [faqCategory, setFaqCategory] = useState('all');
+  
+  // Add state to track if sections should be loaded
+  const [shouldLoadTimeline, setShouldLoadTimeline] = useState(false);
+  const [shouldLoadFAQ, setShouldLoadFAQ] = useState(false);
+  
+  // Memoize faqData to prevent recreation on every render
+  const faqData = useMemo(() => [
+    {
+      question: "What time should I arrive at the ceremony?",
+      answer: "We recommend arriving 30 minutes before the ceremony starts at 3:00 PM to allow time for parking and seating.",
+      category: "logistics"
+    },
+    {
+      question: "Is there a dress code?",
+      answer: "The dress code is semi-formal. We suggest suits or dress shirts for men and cocktail dresses for women. The venue is outdoors, so comfortable shoes are recommended.",
+      category: "attire"
+    },
+    {
+      question: "Will the ceremony and reception be indoors or outdoors?",
+      answer: "Both the ceremony and reception will be held outdoors, weather permitting. We have an indoor backup location in case of inclement weather.",
+      category: "venue"
+    },
+    {
+      question: "Is there parking available at the venue?",
+      answer: "Yes, complimentary parking is available at the venue. There will be attendants to direct you to the parking area.",
+      category: "logistics"
+    },
+    {
+      question: "Are children welcome?",
+      answer: "We love your little ones, but we've decided to make our wedding an adults-only event. We hope this gives all parents the opportunity to relax and enjoy the celebration.",
+      category: "logistics"
+    },
+    {
+      question: "Are there accommodations nearby?",
+      answer: "Yes, we've reserved a block of rooms at the Hilton Garden Inn, which is 10 minutes from the venue. Use code 'SMITH-JOHNSON' when booking for a special rate.",
+      category: "accommodations"
+    },
+    {
+      question: "Can I take photos during the ceremony?",
+      answer: "We kindly ask that you refrain from taking photos during the ceremony, as we have professional photographers. Feel free to take photos during the reception!",
+      category: "logistics"
+    },
+    {
+      question: "What should I do if I have dietary restrictions?",
+      answer: "Please indicate any dietary restrictions on your RSVP. We'll do our best to accommodate your needs.",
+      category: "logistics"
+    }
+  ], []);
+  
+  // Timeline data
+  const timelineData = [
+    {
+      time: '2:30 PM',
+      title: 'Guest Arrival',
+      description: 'Arrive at Alta d\' Tagaytay and be seated for the ceremony.'
+    },
+    {
+      time: '3:00 PM',
+      title: 'Ceremony Begins',
+      description: 'The wedding ceremony will start promptly.'
+    },
+    {
+      time: '4:00 PM',
+      title: 'Cocktail Hour',
+      description: 'Enjoy drinks and hors d\'oeuvres while the wedding party takes photos.'
+    },
+    {
+      time: '5:00 PM',
+      title: 'Reception Begins',
+      description: 'Grand entrance of the wedding party and couple.'
+    },
+    {
+      time: '5:30 PM',
+      title: 'Dinner Service',
+      description: 'A delicious multi-course dinner will be served.'
+    },
+    {
+      time: '7:00 PM',
+      title: 'Speeches & Toasts',
+      description: 'Listen to heartfelt messages from family and friends.'
+    },
+    {
+      time: '8:00 PM',
+      title: 'First Dance',
+      description: 'The couple\'s first dance followed by parent dances.'
+    },
+    {
+      time: '8:30 PM',
+      title: 'Dance Party',
+      description: 'The dance floor opens for everyone to celebrate!'
+    },
+    {
+      time: '11:00 PM',
+      title: 'Farewell',
+      description: 'The celebration concludes with a special sendoff.'
+    }
+  ];
+  
+  // Details data
+  const detailsData = [
+    {
+      title: 'Ceremony',
+      description: 'Our ceremony will take place in the beautiful garden pavilion overlooking Taal Lake. The ceremony will be a blend of Filipino and Australian traditions.',
+      image: '/images/ceremony.jpg',
+      time: '3:00 PM - 4:00 PM'
+    },
+    {
+      title: 'Cocktail Hour',
+      description: 'Following the ceremony, enjoy cocktails and canapés on the terrace while taking in the breathtaking views of Taal Volcano.',
+      image: '/images/cocktail.jpg',
+      time: '4:00 PM - 5:00 PM'
+    },
+    {
+      title: 'Reception',
+      description: 'The reception will be held in the grand ballroom, featuring a sumptuous dinner, heartfelt speeches, and dancing into the night.',
+      image: '/images/reception.jpg',
+      time: '5:00 PM - 11:00 PM'
+    },
+    {
+      title: 'Accommodations',
+      description: 'We have arranged special rates at several nearby hotels. See the Travel page for more details and booking information.',
+      image: '/images/accommodations.jpg',
+      time: 'Check-in: 2:00 PM'
+    },
+    {
+      title: 'Transportation',
+      description: 'Shuttle service will be provided from designated hotels to the venue and back. Please indicate your transportation needs in your RSVP.',
+      image: '/images/transportation.jpg',
+      time: 'First shuttle: 1:30 PM'
+    },
+    {
+      title: 'After Party',
+      description: 'For those who want to continue the celebration, we\'ve arranged an after-party at the hotel bar with late-night snacks and drinks.',
+      image: '/images/afterparty.jpg',
+      time: '11:00 PM - 2:00 AM'
+    }
+  ];
+  
+  // Additional details data for card backs
+  const detailsBackData = [
+    {
+      title: "Ceremony Details",
+      content: "Our ceremony will blend Filipino and Australian traditions. We'll have readings in both languages and incorporate symbolic rituals from both cultures.",
+      icon: "🏛️"
+    },
+    {
+      title: "Cocktail Hour Info",
+      content: "Enjoy signature drinks named after meaningful places in our relationship. Live music will be performed by a string quartet.",
+      icon: "🍹"
+    },
+    {
+      title: "Reception Highlights",
+      content: "Our first dance will be to 'Perfect' by Ed Sheeran. The menu features a fusion of Filipino and Australian cuisine.",
+      icon: "💃"
+    },
+    {
+      title: "Where to Stay",
+      content: "Use code 'ELAINETOBYWED' when booking at partner hotels for a 15% discount. Free shuttle service available from all partner hotels.",
+      icon: "🏨"
+    },
+    {
+      title: "Getting There",
+      content: "Shuttles will run every 30 minutes starting at 1:30 PM. For those driving, valet parking is complimentary for wedding guests.",
+      icon: "🚌"
+    },
+    {
+      title: "After Party Fun",
+      content: "The after party will feature a live DJ, late-night snacks, and a photo booth with fun props. Casual attire welcome!",
+      icon: "🎉"
+    }
+  ];
+  
+  // Optimize the scroll to details function
+  const scrollToDetails = useCallback(() => {
+    detailsRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+  
+  // Toggle FAQ
+  const toggleFAQ = (index: number) => {
+    if (openFAQ === index) {
+      setOpenFAQ(null);
+    } else {
+      setOpenFAQ(index);
+    }
+  };
+  
+  // Toggle card flip
+  const toggleCardFlip = (index: number) => {
+    if (flippedCards.includes(index)) {
+      setFlippedCards(flippedCards.filter(i => i !== index));
+    } else {
+      setFlippedCards([...flippedCards, index]);
+    }
+  };
+  
+  // Define stopTimelineAutoPlay before it's used in other functions
+  const stopTimelineAutoPlay = useCallback(() => {
+    if (timelineAutoPlayRef.current) {
+      clearInterval(timelineAutoPlayRef.current);
+      timelineAutoPlayRef.current = null;
+    }
+    setIsTimelineAutoPlaying(false);
+  }, []);
+  
+  // Update the calculateTimelineProgress function to set a CSS variable
+  const calculateTimelineProgress = useCallback((index: number) => {
+    const progress = ((index + 1) / timelineData.length) * 100;
+    
+    // Update the CSS variable for the animation
+    if (timelineRef.current) {
+      const progressElement = timelineRef.current.querySelector('.timeline-progress') as HTMLElement;
+      if (progressElement) {
+        progressElement.style.setProperty('--progress-height', `${progress}%`);
+      }
+    }
+    
+    return progress;
+  }, [timelineData.length]);
+  
+  // Optimize timeline functions with useCallback to prevent recreation on every render
+  const handleTimelineDotClick = useCallback((index: number) => {
+    setActiveTimelineIndex(index);
+    setTimelineProgress(calculateTimelineProgress(index));
+    
+    // If auto-playing, stop it
+    if (isTimelineAutoPlaying) {
+      stopTimelineAutoPlay();
+    }
+  }, [isTimelineAutoPlaying, calculateTimelineProgress, stopTimelineAutoPlay]);
+  
+  const goToNextTimelineItem = useCallback(() => {
+    if (activeTimelineIndex < timelineData.length - 1) {
+      const nextIndex = activeTimelineIndex + 1;
+      setActiveTimelineIndex(nextIndex);
+      setTimelineProgress(calculateTimelineProgress(nextIndex));
+    } else {
+      // If we're at the end, stop auto-play
+      stopTimelineAutoPlay();
+    }
+  }, [activeTimelineIndex, timelineData.length, calculateTimelineProgress, stopTimelineAutoPlay]);
+  
+  const goToPrevTimelineItem = useCallback(() => {
+    if (activeTimelineIndex > 0) {
+      const prevIndex = activeTimelineIndex - 1;
+      setActiveTimelineIndex(prevIndex);
+      setTimelineProgress(calculateTimelineProgress(prevIndex));
+    }
+  }, [activeTimelineIndex, calculateTimelineProgress]);
+  
+  const startTimelineAutoPlay = useCallback(() => {
+    setIsTimelineAutoPlaying(true);
+    timelineAutoPlayRef.current = setInterval(() => {
+      setActiveTimelineIndex(prevIndex => {
+        const nextIndex = prevIndex + 1;
+        if (nextIndex >= timelineData.length) {
+          stopTimelineAutoPlay();
+          return prevIndex;
+        }
+        setTimelineProgress(calculateTimelineProgress(nextIndex));
+        return nextIndex;
+      });
+    }, 3000);
+  }, [timelineData.length, stopTimelineAutoPlay, calculateTimelineProgress]);
+  
+  // Optimize parallax effect with requestAnimationFrame and transform
+  useEffect(() => {
+    let rafId: number;
+    
+    const updateParallax = () => {
+      setScrollY(window.scrollY * 0.3);
+      rafId = requestAnimationFrame(updateParallax);
+    };
+    
+    const handleScroll = () => {
+      if (!ticking.current) {
+        cancelAnimationFrame(rafId);
+        rafId = requestAnimationFrame(updateParallax);
+        ticking.current = true;
+        
+        // Reset ticking after a short delay to allow for smooth animation
+        setTimeout(() => {
+          ticking.current = false;
+        }, 20);
+      }
+    };
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    rafId = requestAnimationFrame(updateParallax);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+  
+  // Memoize hearts generation to prevent recalculation on every render
+  const hearts = useMemo(() => {
+    return Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      size: Math.random() * 20 + 10,
+      delay: Math.random() * 5,
+      left: Math.random() * 100
+    }));
+  }, []);
+  
+  // Memoize filtered FAQs to prevent recalculation on every render
+  const filteredFaqs = useMemo(() => {
+    return faqData.filter(faq => {
+      const matchesSearch = faq.question.toLowerCase().includes(faqSearchQuery.toLowerCase()) || 
+                           faq.answer.toLowerCase().includes(faqSearchQuery.toLowerCase());
+      const matchesCategory = faqCategory === 'all' || faq.category === faqCategory;
+      
+      return matchesSearch && matchesCategory;
+    });
+  }, [faqData, faqSearchQuery, faqCategory]); // Only recalculate when these dependencies change
+  
+  // Use Intersection Observer instead of scroll events for visibility detection
+  useEffect(() => {
+    // Create observers for each section
+    const detailsObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !isVisible.details) {
+          setIsVisible(prev => ({ ...prev, details: true }));
+        }
+      },
+      { threshold: 0.1 }
+    );
+    
+    const timelineObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          if (!shouldLoadTimeline) {
+            setShouldLoadTimeline(true);
+          }
+          
+          if (!isVisible.timeline) {
+            setIsVisible(prev => ({ ...prev, timeline: true }));
+            setTimelineProgress(calculateTimelineProgress(activeTimelineIndex));
+          }
+        }
+      },
+      { threshold: 0.1, rootMargin: "200px 0px" }
+    );
+    
+    const faqObserver = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !shouldLoadFAQ) {
+          setShouldLoadFAQ(true);
+        }
+      },
+      { threshold: 0.1, rootMargin: "300px 0px" }
+    );
+    
+    // Observe elements
+    if (detailsRef.current) {
+      detailsObserver.observe(detailsRef.current);
+    }
+    
+    if (timelineRef.current) {
+      timelineObserver.observe(timelineRef.current);
+    }
+    
+    // Create a placeholder for FAQ section
+    const faqPlaceholder = document.getElementById('faq-placeholder');
+    if (faqPlaceholder) {
+      faqObserver.observe(faqPlaceholder);
+    }
+    
+    // Cleanup
+    return () => {
+      if (detailsRef.current) detailsObserver.unobserve(detailsRef.current);
+      if (timelineRef.current) timelineObserver.unobserve(timelineRef.current);
+      if (faqPlaceholder) faqObserver.unobserve(faqPlaceholder);
+      
+      detailsObserver.disconnect();
+      timelineObserver.disconnect();
+      faqObserver.disconnect();
+    };
+  }, [isVisible, activeTimelineIndex, calculateTimelineProgress, shouldLoadTimeline, shouldLoadFAQ]);
+  
+  // Clean up interval on unmount
+  useEffect(() => {
+    return () => {
+      if (timelineAutoPlayRef.current) {
+        clearInterval(timelineAutoPlayRef.current);
+      }
+    };
+  }, []);
+  
+  return (
+    <PageContainer>
+      <WeddingAnimations enabled={true} />
+      
+      <HeroSection>
+        <ParallaxLayer depth={-1} image="/images/filipino-decoration.svg" />
+        <ParallaxLayer depth={-2} image="/images/australian-decoration.svg" />
+        
+        {hearts.map(heart => (
+          <FloatingHeart 
+            key={heart.id}
+            size={heart.size}
+            delay={heart.delay}
+            left={heart.left}
+          />
+        ))}
+        
+        <HeroContent style={{ 
+          transform: `translate3d(0, ${scrollY}px, 0)`,
+          willChange: 'transform'
+        }}>
+          <HeroTitle>Wedding Details</HeroTitle>
+          <HeroSubtitle>Everything you need to know about our special day</HeroSubtitle>
+        </HeroContent>
+        
+        <CursorElement cursorType="button" cursorText="Scroll" cursorTheme="rustyBlue">
+          <ScrollIndicator onClick={scrollToDetails}>
+            <ScrollText>Scroll Down</ScrollText>
+            <ScrollArrow />
+          </ScrollIndicator>
+        </CursorElement>
+      </HeroSection>
+      
+      <ContentSection ref={detailsRef}>
+        <TopRightDecoration />
+        <BottomLeftDecoration />
+        
+        <SectionTitle>Event Details</SectionTitle>
+        <DetailsContainer>
+          {detailsData.map((detail, index) => (
+            <MemoizedDetailCard
+              key={index}
+              detail={detail}
+              index={index}
+              isFlipped={flippedCards.includes(index)}
+              toggleCardFlip={toggleCardFlip}
+              backData={detailsBackData[index]}
+            />
+          ))}
+        </DetailsContainer>
+      </ContentSection>
+      
+      <div ref={timelineRef}>
+        {shouldLoadTimeline ? (
+          <Suspense fallback={<LoadingSection color={COLORS.RUSTY_HIGHLIGHT}>Loading timeline...</LoadingSection>}>
+            <LazyTimelineSection 
+              timelineData={timelineData}
+              activeTimelineIndex={activeTimelineIndex}
+              timelineProgress={timelineProgress}
+              handleTimelineDotClick={handleTimelineDotClick}
+              goToPrevTimelineItem={goToPrevTimelineItem}
+              goToNextTimelineItem={goToNextTimelineItem}
+              isTimelineAutoPlaying={isTimelineAutoPlaying}
+              startTimelineAutoPlay={startTimelineAutoPlay}
+              stopTimelineAutoPlay={stopTimelineAutoPlay}
+            />
+          </Suspense>
+        ) : (
+          <LoadingSection color={COLORS.RUSTY_HIGHLIGHT}>
+            <SectionTitle>Wedding Day Timeline</SectionTitle>
+          </LoadingSection>
+        )}
+      </div>
+      
+      <div id="faq-placeholder">
+        {shouldLoadFAQ ? (
+          <Suspense fallback={<LoadingSection>Loading FAQs...</LoadingSection>}>
+            <LazyFAQSection 
+              faqData={faqData}
+              openFAQ={openFAQ}
+              toggleFAQ={toggleFAQ}
+              faqSearchQuery={faqSearchQuery}
+              setFaqSearchQuery={setFaqSearchQuery}
+              faqCategory={faqCategory}
+              setFaqCategory={setFaqCategory}
+              filteredFaqs={filteredFaqs}
+            />
+          </Suspense>
+        ) : (
+          <LoadingSection>
+            <SectionTitle>Frequently Asked Questions</SectionTitle>
+          </LoadingSection>
+        )}
+      </div>
+    </PageContainer>
+  );
+};
+
+export default DetailsPage; 
